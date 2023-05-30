@@ -1,0 +1,18 @@
+spring:
+  profiles:
+    active: ${ENV_NAME:dev}
+  application:
+    name: task-tracker-service
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info,health,prometheus,mappings
+api:
+  base-path: /
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
