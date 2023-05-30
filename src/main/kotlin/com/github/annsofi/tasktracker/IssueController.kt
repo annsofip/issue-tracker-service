@@ -1,6 +1,7 @@
 package com.github.annsofi.tasktracker
 
-import com.github.annsofi.tasktracker.model.IssueDto
+import com.github.annsofi.tasktracker.model.InputIssueDto
+import com.github.annsofi.tasktracker.model.OutputIssueDto
 import com.github.annsofi.tasktracker.service.IssueService
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -16,22 +17,22 @@ import org.springframework.web.bind.annotation.RestController
 class IssueController(private val issueService: IssueService) {
 
     @PostMapping
-    fun addIssue(@RequestBody issue: IssueDto): IssueDto {
+    fun addIssue(@RequestBody issue: InputIssueDto): OutputIssueDto {
         return issueService.addIssue(issue)
     }
 
     @GetMapping("/{issueId}")
-    fun getIssue(@PathVariable issueId: Long): IssueDto {
+    fun getIssue(@PathVariable issueId: Long): OutputIssueDto {
         return issueService.getIssue(issueId)
     }
 
     @GetMapping
-    fun getIssues(): List<IssueDto> {
+    fun getIssues(): List<OutputIssueDto> {
         return issueService.getIssues()
     }
 
     @PutMapping("/{issueId}")
-    fun updateIssue(@PathVariable issueId: Long, @RequestBody issue: IssueDto): IssueDto {
+    fun updateIssue(@PathVariable issueId: Long, @RequestBody issue: InputIssueDto): OutputIssueDto {
         return issueService.updateIssue(issueId, issue)
     }
 

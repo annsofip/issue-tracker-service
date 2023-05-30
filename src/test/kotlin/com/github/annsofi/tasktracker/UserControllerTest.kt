@@ -28,20 +28,23 @@ class UserControllerTest {
             email = "user1@test.com",
         )
 
-        mockMvc.perform(
+        val userResponse = mockMvc.perform(
             post("/api/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(userDto)),
         )
             .andExpect(status().isOk)
+            .andReturn()
+
+        val createdUser = objectMapper.readValue(userResponse.response.contentAsString, UserDto::class.java)
 
         mockMvc.perform(
-            get("/api/users/1")
+            get("/api/users/${createdUser.id}")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(userDto)),
         )
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.id").value(1))
             .andExpect(jsonPath("$.name").value(userDto.name))
+            .andExpect(jsonPath("$.email").value(userDto.email))
     }
 }

@@ -1,9 +1,10 @@
 package com.github.annsofi.tasktracker
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.github.annsofi.tasktracker.model.IssueDto
+import com.github.annsofi.tasktracker.model.InputIssueDto
 import com.github.annsofi.tasktracker.model.IssueStateDto
 import com.github.annsofi.tasktracker.model.IssueTypeDto
+import com.github.annsofi.tasktracker.model.OutputIssueDto
 import com.github.annsofi.tasktracker.model.UserDto
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -19,12 +20,9 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import java.time.LocalDateTime
 
-@ExtendWith(SpringExtension::class)
-@SpringBootTest
+@SpringBootTest(classes = [TaskTrackerApplication::class])
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
 class IssueControllerTest {
 
     @Autowired
@@ -35,30 +33,30 @@ class IssueControllerTest {
 
     @Test
     fun `test create and retrieve issue`() {
-        val newIssue = IssueDto(
-            id = null,
+        val newIssue = InputIssueDto(
             title = "Test issue",
             type = IssueTypeDto.TASK,
             state = IssueStateDto.TODO,
-            created = LocalDateTime.now(),
-            lastUpdated = LocalDateTime.now(),
             userId = null,
             parentId = null,
         )
 
         // Create
-        mockMvc.perform(
+        val issueResponse = mockMvc.perform(
             post("/api/issues")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newIssue)),
         )
             .andExpect(status().isOk)
+            .andReturn()
+
+        val createdIssue = objectMapper.readValue(issueResponse.response.contentAsString, OutputIssueDto::class.java)
 
         // Verify
-        mockMvc.perform(get("/api/issues"))
+        mockMvc.perform(get("/api/issues/${createdIssue.id}"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.[*].title").value("Test issue"))
-            .andExpect(jsonPath("$.[*].id").value(1))
+            .andExpect(jsonPath("$.title").value("Test issue"))
+            .andExpect(jsonPath("$.id").value(createdIssue.id))
     }
 
     @Test
@@ -75,7 +73,7 @@ class IssueControllerTest {
         val createdUser = objectMapper.readValue(userResponse.response.contentAsString, UserDto::class.java)
 
         // Create issue
-        val issueDto = IssueDto(
+        val issueDto = InputIssueDto(
             title = "Test issue",
             type = IssueTypeDto.STORY,
             state = IssueStateDto.TODO,
@@ -87,7 +85,7 @@ class IssueControllerTest {
         ).andExpect(status().isOk)
             .andReturn()
 
-        val createdIssue = objectMapper.readValue(issueResponse.response.contentAsString, IssueDto::class.java)
+        val createdIssue = objectMapper.readValue(issueResponse.response.contentAsString, OutputIssueDto::class.java)
 
         // Assign user to issue
         mockMvc.perform(
@@ -98,14 +96,14 @@ class IssueControllerTest {
         // Verify
         mockMvc.perform(get("/api/issues/${createdIssue.id}"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.title").value("Test issue"))
-            .andExpect(jsonPath("$.userId").value(1))
+            .andExpect(jsonPath("$.title").value(issueDto.title))
+            .andExpect(jsonPath("$.userId").value(createdUser.id))
     }
 
     @Test
     fun `create user, add story issue, set issue state to in progress, remove user`() {
         val userDto = UserDto(name = "John Doe", email = "john@example.com")
-        val issueDto = IssueDto(title = "Test Story", type = IssueTypeDto.STORY, state = IssueStateDto.TODO)
+        val issueDto = InputIssueDto(title = "Test Story", type = IssueTypeDto.STORY, state = IssueStateDto.TODO)
 
         // Create User
         val createUserResponse = mockMvc.perform(
@@ -118,7 +116,7 @@ class IssueControllerTest {
         val createdUserId = objectMapper.readValue(createUserResponse.response.contentAsString, UserDto::class.java).id
 
         // Create Issue
-        val createIssueResponse = mockMvc.perform(
+        val createIssue = mockMvc.perform(
             post("/api/issues")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(issueDto)),
@@ -126,12 +124,26 @@ class IssueControllerTest {
             .andReturn()
 
         val createdIssueId =
-            objectMapper.readValue(createIssueResponse.response.contentAsString, IssueDto::class.java).id
+            objectMapper.readValue(createIssue.response.contentAsString, OutputIssueDto::class.java).id
+
+        // Assign user to issue
+        mockMvc.perform(
+            post("/api/issues/${createdIssueId}/assign/${createdUserId}")
+                .contentType(MediaType.APPLICATION_JSON),
+        ).andExpect(status().isOk)
 
         // Update Issue state to IN_PROGRESS
+        val state = "IN_PROGRESS"
         mockMvc.perform(
-            put("/api/issues/$createdIssueId/state/IN_PROGRESS"),
+            put("/api/issues/$createdIssueId/state/$state"),
         ).andExpect(status().isOk)
+
+        // Validate that user is assigned and issue IN_PROGRESS
+        mockMvc.perform(
+            get("/api/issues/$createdIssueId"),
+        ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.userId").value(createdUserId))
+            .andExpect(jsonPath("$.state").value(state))
 
         // Unassign user from Issue
         mockMvc.perform(

@@ -1,18 +1,21 @@
 package com.github.annsofi.tasktracker.repository.entity
 
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
-import java.time.LocalDateTime
+import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.UpdateTimestamp
+import java.time.Instant
 
 @Entity
 data class Issue(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long?,
+    val id: Long? = null,
 
     val title: String,
 
@@ -22,13 +25,17 @@ data class Issue(
     @Enumerated(EnumType.STRING)
     val state: IssueState,
 
-    val created: LocalDateTime,
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    val created: Instant? = null,
 
-    val lastUpdated: LocalDateTime,
+    @UpdateTimestamp
+    @Column(nullable = false)
+    val lastUpdated: Instant? = null,
 
-    val userId: Long?,
+    val userId: Long? = null,
 
-    val parentId: Long?,
+    val parentId: Long? = null,
 )
 
 enum class IssueType {

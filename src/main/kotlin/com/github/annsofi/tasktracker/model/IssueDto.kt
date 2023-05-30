@@ -1,14 +1,22 @@
 package com.github.annsofi.tasktracker.model
 
-import java.time.LocalDateTime
+import java.time.Instant
 
-data class IssueDto(
+data class InputIssueDto(
+    val title: String,
+    val type: IssueTypeDto,
+    val state: IssueStateDto,
+    val userId: Long? = null,
+    val parentId: Long? = null,
+)
+
+data class OutputIssueDto(
     val id: Long? = null,
     val title: String,
     val type: IssueTypeDto,
     val state: IssueStateDto,
-    val created: LocalDateTime = LocalDateTime.now(),
-    val lastUpdated: LocalDateTime = LocalDateTime.now(),
+    val created: Instant = Instant.now(),
+    val lastUpdated: Instant = Instant.now(),
     val userId: Long? = null,
     val parentId: Long? = null,
 )

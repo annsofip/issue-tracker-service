@@ -1,6 +1,6 @@
 package com.github.annsofi.tasktracker.service
 
-import com.github.annsofi.tasktracker.model.IssueDto
+import com.github.annsofi.tasktracker.model.InputIssueDto
 import com.github.annsofi.tasktracker.model.IssueStateDto
 import com.github.annsofi.tasktracker.model.IssueTypeDto
 import com.github.annsofi.tasktracker.repository.IssueRepository
@@ -18,7 +18,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.web.server.ResponseStatusException
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.Optional
 
 class IssueServiceTest {
@@ -36,14 +36,12 @@ class IssueServiceTest {
     @Test
     fun `addIssue should save the issue in the repository`() {
         // given
-        val created = LocalDateTime.now()
+        val created = Instant.now()
         val issue = Issue(
             id = null,
             title = "lobortis",
             type = IssueType.TASK,
             state = IssueState.IN_PROGRESS,
-            created = created,
-            lastUpdated = created,
             userId = null,
             parentId = null,
         )
@@ -51,13 +49,10 @@ class IssueServiceTest {
 
         // when
         val result = issueService.addIssue(
-            IssueDto(
-                id = null,
+            InputIssueDto(
                 title = "lobortis",
                 type = IssueTypeDto.TASK,
                 state = IssueStateDto.IN_PROGRESS,
-                created = created,
-                lastUpdated = created,
                 userId = null,
                 parentId = null,
             ),
@@ -74,7 +69,7 @@ class IssueServiceTest {
     fun `getIssue should return the issue from the repository`() {
         // given
         val issueId = 1L
-        val created = LocalDateTime.now()
+        val created = Instant.now()
         val issue = Issue(
             id = issueId,
             title = "lobortis",
@@ -100,7 +95,7 @@ class IssueServiceTest {
     @Test
     fun `getIssues should return all issues from the repository`() {
         // given
-        val created = LocalDateTime.now()
+        val created = Instant.now()
         val issue1 = Issue(
             id = 1L,
             title = "lobortis",
@@ -150,7 +145,7 @@ class IssueServiceTest {
     fun `updateIssue should change and save the issue in the repository`() {
         // given
         val issueId = 1L
-        val created = LocalDateTime.now()
+        val created = Instant.now()
         val originalIssue = Issue(
             id = issueId,
             title = "lobortis",
@@ -161,13 +156,10 @@ class IssueServiceTest {
             userId = null,
             parentId = null,
         )
-        val updatedIssueDto = IssueDto(
-            id = issueId,
+        val updatedIssueDto = InputIssueDto(
             title = "amet",
             type = IssueTypeDto.STORY,
             state = IssueStateDto.DONE,
-            created = created,
-            lastUpdated = created,
             userId = null,
             parentId = null,
         )
@@ -207,8 +199,8 @@ class IssueServiceTest {
                 title = "quam",
                 type = IssueType.TASK,
                 state = IssueState.TODO,
-                created = LocalDateTime.now(),
-                lastUpdated = LocalDateTime.now(),
+                created = Instant.now(),
+                lastUpdated = Instant.now(),
                 userId = null,
                 parentId = null,
             ),

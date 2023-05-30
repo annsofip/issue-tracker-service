@@ -1,8 +1,9 @@
 package com.github.annsofi.tasktracker.service
 
-import com.github.annsofi.tasktracker.model.IssueDto
+import com.github.annsofi.tasktracker.model.InputIssueDto
 import com.github.annsofi.tasktracker.model.IssueStateDto
 import com.github.annsofi.tasktracker.model.IssueTypeDto
+import com.github.annsofi.tasktracker.model.OutputIssueDto
 import com.github.annsofi.tasktracker.repository.IssueRepository
 import com.github.annsofi.tasktracker.repository.UserRepository
 import com.github.annsofi.tasktracker.repository.entity.Issue
@@ -18,19 +19,19 @@ class IssueService(
     private val userRepository: UserRepository,
 ) {
 
-    fun addIssue(issueDto: IssueDto): IssueDto {
+    fun addIssue(issueDto: InputIssueDto): OutputIssueDto {
         val issue = toEntity(issueDto)
         val savedIssue = issueRepository.save(issue)
         return toDto(savedIssue)
     }
 
-    fun getIssue(issueId: Long): IssueDto {
+    fun getIssue(issueId: Long): OutputIssueDto {
         val issue = issueRepository.findById(issueId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Issue not found") }
         return toDto(issue)
     }
 
-    fun getIssues(): List<IssueDto> {
+    fun getIssues(): List<OutputIssueDto> {
         val issues = issueRepository.findAll()
         return issues.map { toDto(it) }
     }
@@ -81,7 +82,7 @@ class IssueService(
         issueRepository.save(updatedIssue)
     }
 
-    fun updateIssue(issueId: Long, updatedIssueDto: IssueDto): IssueDto {
+    fun updateIssue(issueId: Long, updatedIssueDto: InputIssueDto): OutputIssueDto {
         val issue = issueRepository.findById(issueId)
             .orElseThrow { throw ResponseStatusException(HttpStatus.NOT_FOUND, "Issue not found") }
 
@@ -97,14 +98,12 @@ class IssueService(
         return toDto(savedIssue)
     }
 
-    private fun toDto(issue: Issue): IssueDto {
-        return IssueDto(
+    private fun toDto(issue: Issue): OutputIssueDto {
+        return OutputIssueDto(
             id = issue.id,
             title = issue.title,
             type = toTypeDto(issue.type),
             state = toStateDto(issue.state),
-            created = issue.created,
-            lastUpdated = issue.lastUpdated,
             userId = issue.userId,
             parentId = issue.parentId,
         )
@@ -126,14 +125,11 @@ class IssueService(
         }
     }
 
-    private fun toEntity(issueDto: IssueDto): Issue {
+    private fun toEntity(issueDto: InputIssueDto): Issue {
         return Issue(
-            id = issueDto.id,
             title = issueDto.title,
             type = toTypeEntity(issueDto.type),
             state = toStateEntity(issueDto.state),
-            created = issueDto.created,
-            lastUpdated = issueDto.lastUpdated,
             userId = issueDto.userId,
             parentId = issueDto.parentId,
         )
